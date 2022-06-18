@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Don't worry about the above (don't change it though) - it's for when we have a physical robot
+# to work with.
 
 # READ ALL COMMENTS VERY CAREFULLY.
 
@@ -56,7 +58,7 @@ INF_DIR_MED_RIGHT = 8
 INF_DIR_FAR_RIGHT = 9
 
 # TODO: Use the compass to determine where we are facing relative to our original direction.
-# Use this to help us locate where the goals is.
+# Use this to help us locate where the goals are.
 # Don't need to worry about this for now.
 off_direction = 0
 
@@ -113,7 +115,8 @@ def right(p, sec, Block):
 # we need more fine-tuned positioning of the robot in relation to the ball.
 # The first element of the tuple returned is the general direction,
 # the second element is the strength.
-# The function returns a tuuple - you must cast it into a list using 'list()'
+# The higher the strength, the closer the ball is.
+# The function returns a tuple - you must cast it into a list using 'list()'
 # as illustrated later.
 def inf_direction_strength(inf):
     INF_DIRECTION = 0
@@ -148,6 +151,7 @@ motor_time = 0.2
 sideways_pow = 100
 sideways_time = 0.1
 # This is how close to the ball we deem the infrared sensor to be irrelevant.
+# You can change this to see what happens.
 close_thresh = 7
 
 # BIG NOTE THAT MUST BE READ:
@@ -157,6 +161,10 @@ close_thresh = 7
 # above to make it work.
 # We just need to import this file.
 
+# Right now, all we are doing is finding out which way the ball is,
+# moving horizontally so that we're in line with it, and moving forward.
+# It should be enough for a few of the basic soccer exercises, which consist
+# of only getting the ball to the backboard.
 # TODO: Use rotation instead of going left/right and then forward (more efficient)
 # See if you can figure out how to do this.
 while True:
