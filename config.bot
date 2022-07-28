@@ -12,11 +12,11 @@ base_plate:
     stroke_width: 0.1
     zPos: 1
 devices:
-- LargeMotor:
+- MediumMotor:
     position: [0, 5]
     rotation: 0
     port: outC
-- LargeMotor:
+- MediumMotor:
     position: [0, -5]
     rotation: 0
     port: outD
@@ -35,11 +35,11 @@ devices:
 - CompassSensor:
     position: [0, 0]
     port: in4
-- LargeMotor:
+- MediumMotor:
     position: [5,0]
     rotation: 90
     port: outA
-- LargeMotor:
+- MediumMotor:
     position: [-5,0]
     rotation: 90
     port: outB
