@@ -30,16 +30,15 @@ import time
 # The colour sensor is fairly uselss at the moment.
 # TODO: Use the colour sensor to determine if we are on the boundary of the playing field;
 # if that is the case, go back immediately, as the robot is not allowed outside of the playing area.
-cs = ColorSensor(INPUT_2)
+#cs = ColorSensor(INPUT_2)
 
 # The four motors.
 # 'motor1' and 'motor2' are the horizontal motors.
 # 'motor3' and 'motor4' are the vertical motors.
-motor1 = LargeMotor(OUTPUT_A)
-motor2 = LargeMotor(OUTPUT_B)
-motor3 = LargeMotor(OUTPUT_C)
-motor4 = LargeMotor(OUTPUT_D)
-
+motor1 = MediumMotor(OUTPUT_A)
+motor2 = MediumMotor(OUTPUT_B)
+motor3 = MediumMotor(OUTPUT_C)
+motor4 = MediumMotor(OUTPUT_D)
 # Enums but not really.
 # These are just the values returned from the infrared sensor that tell
 # us in which the direction the ball is.
@@ -106,6 +105,12 @@ def right(p, sec, Block):
     motor1.on_for_seconds(SpeedPercent(-p), sec, block=Block)
     motor2.on_for_seconds(SpeedPercent(-p), sec)
     
+def test_robot():
+    while True:
+        right(100, 1, False)
+        forward(100, 1, False)
+        left(100, 1, False)
+        backward(100, 1, False)
 # The following routines get information from the infrared sensor.
 # If you read the documentation on Canvas, you will know that the
 # infrared sensor's 0th and 6th values are the average direction
@@ -141,6 +146,8 @@ FREQ = 1
 # If it is white (#FFFFFF) go back immediately (this is out of bounds).
 # Use the colour sensor for this.
 
+test_robot()
+
 # Motor time units - adjust accordingly depending on what happens for different values.
 # Use trial and error.
 motor_time = 0.2
@@ -170,6 +177,8 @@ close_thresh = 7
 while True:
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 
+    current_time = time.time()
+    
     data = inf_direction_strength(inf)
 
     # If we are close enough to the ball or it is directly in the centre
