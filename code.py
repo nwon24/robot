@@ -27,118 +27,151 @@ from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1
 from ev3dev2.sensor.lego import ColorSensor, UltrasonicSensor, InfraredSensor
 import time
 
-# The colour sensor is fairly uselss at the moment.
-# TODO: Use the colour sensor to determine if we are on the boundary of the playing field;
-# if that is the case, go back immediately, as the robot is not allowed outside of the playing area.
-#cs = ColorSensor(INPUT_2)
+MEDIUM_MOTOR = 0
+LARGE_MOTOR = 1
+class Robot():
 
-# The four motors.
-# 'motor1' and 'motor2' are the horizontal motors.
-# 'motor3' and 'motor4' are the vertical motors.
-motor1 = MediumMotor(OUTPUT_A)
-motor2 = MediumMotor(OUTPUT_B)
-motor3 = MediumMotor(OUTPUT_C)
-motor4 = MediumMotor(OUTPUT_D)
-# Enums but not really.
-# These are just the values returned from the infrared sensor that tell
-# us in which the direction the ball is.
-# Hopefully the variable names are self explanatory.
-# They are in all caps because they are constants; the infrared sensor
-# will always return numbers that correspond to these values.
-INF_DIR_NO_SIG = 0
-INF_DIR_FAR_LEFT = 1
-INF_DIR_MED_LEFT = 2
-INF_DIR_LEFT = 3
-INF_DIR_CEN_LEFT = 4
-INF_DIR_CEN = 5
-INF_DIR_CEN_RIGHT = 6
-INF_DIR_RIGHT = 7
-INF_DIR_MED_RIGHT = 8
-INF_DIR_FAR_RIGHT = 9
+    # The colour sensor is fairly uselss at the moment.
+    # TODO: Use the colour sensor to determine if we are on the boundary of the playing field;
+    # if that is the case, go back immediately, as the robot is not allowed outside of the playing area.
+    #cs = ColorSensor(INPUT_2)
 
-# TODO: Use the compass to determine where we are facing relative to our original direction.
-# Use this to help us locate where the goals are.
-# Don't need to worry about this for now.
-off_direction = 0
+    # Motor time units - adjust accordingly depending on what happens for different values.
+    # Use trial and error.
+    MED_MOTOR_TIME = 0.4
+    LARGE_MOTOR_TIME = 0.2
+    # How much power/time to go left/right?
+    # If you make this too high, the granularity is of each movement is too big.
+    # If you make this too low, the robot moves really slowly.
+    # Adjust so that the robot movement isn't too high when it is near to the ball
+    LARGE_SIDEWAYS_POW = 100
+    MED_SIDEWAYS_POW = 100
+    LARGE_SIDEWAYS_TIME = 0.1
+    MED_SIDEWAYS_TIME = 0.5
 
-# These are a bunch of magic numbers that allow for the robot to turn in an exact number
-# of degrees expressed in terms of motor power and time.
-# These values were found using trial and error, DO NOT CHANGE. I shall know.
-# percent 87 time 0.4 sec for 90 deg rotation left
-rotate_magic_p = 97
-rotate_magic_t = 0.4
-motor_magic_t = 0.4
+    def __init__(self, motor_type):
+        self.motor_type = motor_type
+        if motor_type == MEDIUM_MOTOR:
+            self.motor_time = self.MED_MOTOR_TIME
+            self.motor_sideways_pow = self.MED_SIDEWAYS_POW
+            self.motor_sideways_time = self.MED_SIDEWAYS_TIME
+        else:
+            self.motor_time = self.LARGE_MOTOR_TIME
+            self.motor_sideways_pow = self.LARGE_SIDEWAYS_POW
+            self.motor_sideways_time = self.LARGE_SIDEWAYS_TIME
 
-# The following routines are general motor functions.
-# The rotatate functions aren't really that helpful at the moment until you figure out
-# how to determine how much to rotate to face the ball.
-# If you do figure this out but cannot write the code, just put it in English somewhere.
-# Don't worry too much about the 'Block' argument; it determines whether the call
-# to 'on_for_seconds' blocks (suspends executation) until it is done or not.
-def rotate_left(deg, Block):
-    motor1.on_for_seconds(SpeedPercent(rotate_magic_p * deg / 90), rotate_magic_t, block=Block)
-    global off_direction
-    off_direction -= deg
+        # The four motors.
+        # 'motor1' and 'motor2' are the horizontal motors.
+        # 'motor3' and 'motor4' are the vertical motors.
+        if motor_type == MEDIUM_MOTOR:
+            self.motor1 = MediumMotor(OUTPUT_A)
+            self.motor2 = MediumMotor(OUTPUT_B)
+            self.motor3 = MediumMotor(OUTPUT_C)
+            self.motor4 = MediumMotor(OUTPUT_D)
+        else:
+            self.motor1 = LargeMotor(OUTPUT_A)
+            self.motor2 = LargeMotor(OUTPUT_B)
+            self.motor3 = LargeMotor(OUTPUT_C)
+            self.motor4 = LargeMotor(OUTPUT_D)
+    # Enums but not really.
+    # These are just the values returned from the infrared sensor that tell
+    # us in which the direction the ball is.
+    # Hopefully the variable names are self explanatory.
+    # They are in all caps because they are constants; the infrared sensor
+    # will always return numbers that correspond to these values.
+    INF_DIR_NO_SIG = 0
+    INF_DIR_FAR_LEFT = 1
+    INF_DIR_MED_LEFT = 2
+    INF_DIR_LEFT = 3
+    INF_DIR_CEN_LEFT = 4
+    INF_DIR_CEN = 5
+    INF_DIR_CEN_RIGHT = 6
+    INF_DIR_RIGHT = 7
+    INF_DIR_MED_RIGHT = 8
+    INF_DIR_FAR_RIGHT = 9
 
-def rotate_right(deg, Block):
-    motor1.on_for_seconds(SpeedPercent(rotate_magic_p * -deg / 90), rotate_magic_t, block=Block)
-    global off_direction
-    off_direction += deg
+    # TODO: Use the compass to determine where we are facing relative to our original direction.
+    # Use this to help us locate where the goals are.
+    # Don't need to worry about this for now.
+    off_direction = 0
 
-# The following routines are fairly self-explanatory and can be easily understood
-# if the comment about which motors are which is understood.
-# In the future, we want to not use 'left' and 'right' to get to the ball -  instead we should go directly to it using
-# 'rotate_left' and 'rotate_right'
-def forward(p, sec, Block):
-    motor3.on_for_seconds(SpeedPercent(p), sec,block=Block)
-    motor4.on_for_seconds(SpeedPercent(p), sec)
+    # These are a bunch of magic numbers that allow for the robot to turn in an exact number
+    # of degrees expressed in terms of motor power and time.
+    # These values were found using trial and error, DO NOT CHANGE. I shall know.
+    # percent 87 time 0.4 sec for 90 deg rotation left
+    rotate_magic_p = 97
+    rotate_magic_t = 0.4
+    motor_magic_t = 0.4
 
-def backward(p, sec, Block):
-    motor3.on_for_seconds(SpeedPercent(-p), sec, block=Block)
-    motor4.on_for_seconds(SpeedPercent(-p), sec)
+    # The following routines are general motor functions.
+    # The rotatate functions aren't really that helpful at the moment until you figure out
+    # how to determine how much to rotate to face the ball.
+    # If you do figure this out but cannot write the code, just put it in English somewhere.
+    # Don't worry too much about the 'Block' argument; it determines whether the call
+    # to 'on_for_seconds' blocks (suspends executation) until it is done or not.
+    def rotate_left(self, deg, Block):
+        self.motor1.on_for_seconds(SpeedPercent(self.rotate_magic_p * deg / 90), self.rotate_magic_t, block=Block)
+        self.off_direction -= deg
 
-def left(p, sec, Block):
-    motor1.on_for_seconds(SpeedPercent(p), sec, block=Block)
-    motor2.on_for_seconds(SpeedPercent(p), sec)
+    def rotate_right(self, deg, Block):
+        self.motor1.on_for_seconds(SpeedPercent(self.rotate_magic_p * -deg / 90), self.rotate_magic_t, block=Block)
+        self.off_direction += deg
 
-def right(p, sec, Block):
-    motor1.on_for_seconds(SpeedPercent(-p), sec, block=Block)
-    motor2.on_for_seconds(SpeedPercent(-p), sec)
-    
-def test_robot():
+    # The following routines are fairly self-explanatory and can be easily understood
+    # if the comment about which motors are which is understood.
+    # In the future, we want to not use 'left' and 'right' to get to the ball -  instead we should go directly to it using
+    # 'rotate_left' and 'rotate_right'
+    def forward(self, p, sec, Block):
+        self.motor3.on_for_seconds(SpeedPercent(p), sec,block=Block)
+        self.motor4.on_for_seconds(SpeedPercent(p), sec)
+
+    def backward(self,p, sec, Block):
+        self.motor3.on_for_seconds(SpeedPercent(-p), sec, block=Block)
+        self.motor4.on_for_seconds(SpeedPercent(-p), sec)
+
+    def left(self,p, sec, Block):
+        self.motor1.on_for_seconds(SpeedPercent(p), sec, block=Block)
+        self.motor2.on_for_seconds(SpeedPercent(p), sec)
+
+    def right(self, p, sec, Block):
+        self.motor1.on_for_seconds(SpeedPercent(-p), sec, block=Block)
+        self.motor2.on_for_seconds(SpeedPercent(-p), sec)
+ 
+    # The following routines get information from the infrared sensor.
+    # If you read the documentation on Canvas, you will know that the
+    # infrared sensor's 0th and 6th values are the average direction
+    # strength respectively.
+    # Subsensor values are values 1 through 5.
+    # You needn't worry about the subsensor values for the moment, until
+    # we need more fine-tuned positioning of the robot in relation to the ball.
+    # The first element of the tuple returned is the general direction,
+    # the second element is the strength.
+    # The higher the strength, the closer the ball is.
+    # The function returns a tuple - you must cast it into a list using 'list()'
+    # as illustrated later.
+    def inf_direction_strength(self):
+        return (self.inf.value(0), self.inf.value(6))
+
+    def inf_subsensors(self, inf):
+        return (self.inf.value(i) for i in range(1, 6))
+
+    # Instantiate the ultrasonic sensor
+    # This will be used to determine how far we are away from a wall or something like that.
+    us = UltrasonicSensor(INPUT_3)
+
+    # Bit late for the initialisation of the infrared sensor, but...
+    inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
+   
+def test_robot(robot):
     while True:
         print("Hello")
-        right(100, 1, False)
-        forward(100, 1, False)
-        left(100, 1, False)
-        backward(100, 1, False)
-# The following routines get information from the infrared sensor.
-# If you read the documentation on Canvas, you will know that the
-# infrared sensor's 0th and 6th values are the average direction
-# strength respectively.
-# Subsensor values are values 1 through 5.
-# You needn't worry about the subsensor values for the moment, until
-# we need more fine-tuned positioning of the robot in relation to the ball.
-# The first element of the tuple returned is the general direction,
-# the second element is the strength.
-# The higher the strength, the closer the ball is.
-# The function returns a tuple - you must cast it into a list using 'list()'
-# as illustrated later.
-def inf_direction_strength(inf):
-    INF_DIRECTION = 0
-    INF_STRENGTH = 6
-    return (inf.value(INF_DIRECTION), inf.value(INF_STRENGTH))
+        robot.right(100, 1, False)
+        robot.forward(100, 1, False)
+        robot.left(100, 1, False)
+        robot.backward(100, 1, False)
 
-def inf_subsensors(inf):
-    return (inf.value(i) for i in range(1, 6))
 
-# Instantiate the ultrasonic sensor
-# This will be used to determine how far we are away from a wall or something like that.
-us = UltrasonicSensor(INPUT_3)
-
-# Bit late for the initialisation of the infrared sensor, but...
-inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
-
+our_robot = Robot(MEDIUM_MOTOR)
 # DON'T WORRY ABOUT THE FOLLOWING FOR NOW.
 FREQ = 1
 # Uncomment time stuff to do scheduling
@@ -147,17 +180,13 @@ FREQ = 1
 # If it is white (#FFFFFF) go back immediately (this is out of bounds).
 # Use the colour sensor for this.
 
-test_robot()
+# NOTE: If testing on a physical robot just to see whether the robot does
+# anything remotely useful call 'test_robot' to see if it works.
+# In the simulator the robot should move in a square pattern but on
+# a physical robot where the motors are not positioned in the same way
+# the robot might (probably) do something else, perhaps a little more bizarre.
+test_robot(our_robot)
 
-# Motor time units - adjust accordingly depending on what happens for different values.
-# Use trial and error.
-motor_time = 0.2
-# How much power/time to go left/right?
-# If you make this too high, the granularity is of each movement is too big.
-# If you make this too low, the robot moves really slowly.
-# Adjust so that the robot movement isn't too high when it is near to the ball
-sideways_pow = 100
-sideways_time = 0.1
 # This is how close to the ball we deem the infrared sensor to be irrelevant.
 # You can change this to see what happens.
 close_thresh = 7
@@ -180,19 +209,19 @@ while True:
 
     current_time = time.time()
     
-    data = inf_direction_strength(inf)
+    data = our_robot.inf_direction_strength()
 
     # If we are close enough to the ball or it is directly in the centre
     # just head towards it in a straight line.
-    if data[1] == close_thresh or data[0] == INF_DIR_CEN:
-        forward(100, motor_time, False)
+    if data[1] == close_thresh or data[0] == our_robot.INF_DIR_CEN:
+        our_robot.forward(100, our_robot.motor_time, False)
     # Go left or right depending where the ball is.
     # Since we test for 'close_thresh' value in the data collected
     # the ball shouldn't be so close to the robot that the left and
     # right movements result in a perpetual shifting back and forth
     # because a single movement takes the ball from one side of the robot
     # to the other, bypassing the centre.
-    elif data[0] < INF_DIR_CEN:
-        left(sideways_pow, sideways_time, False)
-    elif data[0] > INF_DIR_CEN:
-        right(sideways_pow, sideways_time, False)
+    elif data[0] < our_robot.INF_DIR_CEN:
+        our_robot.left(our_robot.motor_sideways_pow, our_robot.motor_sideways_time, False)
+    elif data[0] > our_robot.INF_DIR_CEN:
+        our_robot.right(our_robot.motor_sideways_pow, our_robot.motor_sideways_time, False)
