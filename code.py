@@ -224,9 +224,12 @@ while True:
     
     data = our_robot.inf_direction_strength()
 
+    # If we get no signal then perhaps the ball is behind us.
+    if data[0] == our_robot.INF_DIR_NO_SIG:
+        our_robot.backward(100)
     # If we are close enough to the ball or it is directly in the centre
     # just head towards it in a straight line.
-    if data[1] == close_thresh or data[0] == our_robot.INF_DIR_CEN:
+    elif data[1] == close_thresh or data[0] == our_robot.INF_DIR_CEN:
         our_robot.forward(100)
     # Go left or right depending where the ball is.
     # Since we test for 'close_thresh' value in the data collected
