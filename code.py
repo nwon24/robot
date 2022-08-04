@@ -47,7 +47,7 @@ class Robot():
     LARGE_SIDEWAYS_POW = 100
     MED_SIDEWAYS_POW = 100
     LARGE_SIDEWAYS_TIME = 0.1
-    MED_SIDEWAYS_TIME = 0.5
+    MED_SIDEWAYS_TIME = 0.4
 
     def __init__(self, motor_type):
         self.motor_type = motor_type
@@ -108,34 +108,48 @@ class Robot():
     # how to determine how much to rotate to face the ball.
     # If you do figure this out but cannot write the code, just put it in English somewhere.
     # Don't worry too much about the 'Block' argument; it determines whether the call
-    # to 'on_for_seconds' blocks (suspends executation) until it is done or not.
-    def rotate_left(self, deg, Block):
-        self.motor1.on_for_seconds(SpeedPercent(self.rotate_magic_p * deg / 90), self.rotate_magic_t, block=Block)
+    # to 'on' blocks (suspends executation) until it is done or not.
+    def rotate_left(self):
+        self.motor2.off()
+        self.motor3.off()
+        self.motor4.off()
+        self.motor1.on(SpeedPercent(self.rotate_magic_p * deg / 90))
         self.off_direction -= deg
 
-    def rotate_right(self, deg, Block):
-        self.motor1.on_for_seconds(SpeedPercent(self.rotate_magic_p * -deg / 90), self.rotate_magic_t, block=Block)
+    def rotate_right(self, deg):
+        self.motor2.off()
+        self.motor3.off()
+        self.motor4.off()
+        self.motor1.on(SpeedPercent(self.rotate_magic_p * -deg / 90))
         self.off_direction += deg
 
     # The following routines are fairly self-explanatory and can be easily understood
     # if the comment about which motors are which is understood.
     # In the future, we want to not use 'left' and 'right' to get to the ball -  instead we should go directly to it using
     # 'rotate_left' and 'rotate_right'
-    def forward(self, p, sec, Block):
-        self.motor3.on_for_seconds(SpeedPercent(p), sec,block=Block)
-        self.motor4.on_for_seconds(SpeedPercent(p), sec)
+    def forward(self, p):
+        self.motor1.off()
+        self.motor2.off()
+        self.motor3.on(SpeedPercent(p))
+        self.motor4.on(SpeedPercent(p))
 
-    def backward(self,p, sec, Block):
-        self.motor3.on_for_seconds(SpeedPercent(-p), sec, block=Block)
-        self.motor4.on_for_seconds(SpeedPercent(-p), sec)
+    def backward(self,p):
+        self.motor1.off()
+        self.motor2.off()
+        self.motor3.on(SpeedPercent(-p))
+        self.motor4.on(SpeedPercent(-p))
 
-    def left(self,p, sec, Block):
-        self.motor1.on_for_seconds(SpeedPercent(p), sec, block=Block)
-        self.motor2.on_for_seconds(SpeedPercent(p), sec)
+    def left(self,p):
+        self.motor3.off()
+        self.motor4.off()
+        self.motor1.on(SpeedPercent(p))
+        self.motor2.on(SpeedPercent(p))
 
-    def right(self, p, sec, Block):
-        self.motor1.on_for_seconds(SpeedPercent(-p), sec, block=Block)
-        self.motor2.on_for_seconds(SpeedPercent(-p), sec)
+    def right(self, p):
+        self.motor3.off()
+        self.motor4.off()
+        self.motor1.on(SpeedPercent(-p))
+        self.motor2.on(SpeedPercent(-p))
  
     # The following routines get information from the infrared sensor.
     # If you read the documentation on Canvas, you will know that the
@@ -164,7 +178,6 @@ class Robot():
    
 def test_robot(robot):
     while True:
-        print("Hello")
         robot.right(100, 1, False)
         robot.forward(100, 1, False)
         robot.left(100, 1, False)
@@ -185,7 +198,7 @@ FREQ = 1
 # In the simulator the robot should move in a square pattern but on
 # a physical robot where the motors are not positioned in the same way
 # the robot might (probably) do something else, perhaps a little more bizarre.
-test_robot(our_robot)
+#test_robot(our_robot)
 
 # This is how close to the ball we deem the infrared sensor to be irrelevant.
 # You can change this to see what happens.
@@ -214,7 +227,7 @@ while True:
     # If we are close enough to the ball or it is directly in the centre
     # just head towards it in a straight line.
     if data[1] == close_thresh or data[0] == our_robot.INF_DIR_CEN:
-        our_robot.forward(100, our_robot.motor_time, False)
+        our_robot.forward(100)
     # Go left or right depending where the ball is.
     # Since we test for 'close_thresh' value in the data collected
     # the ball shouldn't be so close to the robot that the left and
@@ -222,6 +235,6 @@ while True:
     # because a single movement takes the ball from one side of the robot
     # to the other, bypassing the centre.
     elif data[0] < our_robot.INF_DIR_CEN:
-        our_robot.left(our_robot.motor_sideways_pow, our_robot.motor_sideways_time, False)
+        our_robot.left(our_robot.motor_sideways_pow)
     elif data[0] > our_robot.INF_DIR_CEN:
-        our_robot.right(our_robot.motor_sideways_pow, our_robot.motor_sideways_time, False)
+        our_robot.right(our_robot.motor_sideways_pow)
