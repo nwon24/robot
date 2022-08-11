@@ -239,8 +239,6 @@ while True:
     # because a single movement takes the ball from one side of the robot
     # to the other, bypassing the centre.
     elif data[0] < our_robot.INF_DIR_CEN:
-        print(usdata)
         our_robot.left(our_robot.motor_sideways_pow)
     elif data[0] > our_robot.INF_DIR_CEN:
-        print(usdata)
         our_robot.right(our_robot.motor_sideways_pow)
