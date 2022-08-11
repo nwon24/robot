@@ -109,7 +109,7 @@ class Robot():
     # If you do figure this out but cannot write the code, just put it in English somewhere.
     # Don't worry too much about the 'Block' argument; it determines whether the call
     # to 'on' blocks (suspends executation) until it is done or not.
-    def rotate_left(self):
+    def rotate_left(self, deg):
         self.motor2.off()
         self.motor3.off()
         self.motor4.off()
@@ -202,7 +202,7 @@ FREQ = 1
 
 # This is how close to the ball we deem the infrared sensor to be irrelevant.
 # You can change this to see what happens.
-close_thresh = 7
+close_thresh = 3
 
 # BIG NOTE THAT MUST BE READ:
 # The following code is the only part of the code that is only for our bot that
@@ -223,13 +223,14 @@ while True:
     current_time = time.time()
     
     data = our_robot.inf_direction_strength()
+    usdata = our_robot.us.distance_centimeters
 
     # If we get no signal then perhaps the ball is behind us.
     if data[0] == our_robot.INF_DIR_NO_SIG:
         our_robot.backward(100)
     # If we are close enough to the ball or it is directly in the centre
     # just head towards it in a straight line.
-    elif data[1] == close_thresh or data[0] == our_robot.INF_DIR_CEN:
+    elif usdata <= close_thresh or data[0] == our_robot.INF_DIR_CEN:
         our_robot.forward(100)
     # Go left or right depending where the ball is.
     # Since we test for 'close_thresh' value in the data collected
@@ -238,6 +239,8 @@ while True:
     # because a single movement takes the ball from one side of the robot
     # to the other, bypassing the centre.
     elif data[0] < our_robot.INF_DIR_CEN:
+        print(usdata)
         our_robot.left(our_robot.motor_sideways_pow)
     elif data[0] > our_robot.INF_DIR_CEN:
+        print(usdata)
         our_robot.right(our_robot.motor_sideways_pow)
