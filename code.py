@@ -23,7 +23,7 @@
 # don't sprinkle it throughout the code. That is plain ugly.
 from ev3dev2.motor import LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_C,OUTPUT_D, SpeedPercent
 from ev3sim.code_helpers import wait_for_tick
-from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1
+from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import ColorSensor, UltrasonicSensor, InfraredSensor
 import time
 
@@ -47,6 +47,8 @@ class Robot():
     MED_SIDEWAYS_POW = 100
     LARGE_SIDEWAYS_TIME = 0.1
     MED_SIDEWAYS_TIME = 0.4
+
+    off_direction = 0
 
     def __init__(self, motor_type):
         self.motor_type = motor_type
@@ -72,6 +74,15 @@ class Robot():
             self.motor2 = LargeMotor(OUTPUT_B)
             self.motor3 = LargeMotor(OUTPUT_C)
             self.motor4 = LargeMotor(OUTPUT_D)
+        # This is where we use the compass to actually do stuff.
+        # If the robot rotates for whatever reason (like if it hits the corner of a goal)
+        # we want to reotate the right way.
+        self.compass = Sensor(INPUT_4, driver_name='ht-nxt-compass')
+        # Calibrate the compass sensor.
+        self.compass.command = "BEGIN-CAL"
+        self.compass.command = "END-CAL"
+
+
     # Enums but not really.
     # These are just the values returned from the infrared sensor that tell
     # us in which the direction the ball is.
@@ -89,11 +100,6 @@ class Robot():
     INF_DIR_MED_RIGHT = 8
     INF_DIR_FAR_RIGHT = 9
 
-    # TODO: Use the compass to determine where we are facing relative to our original direction.
-    # Use this to help us locate where the goals are.
-    # Don't need to worry about this for now.
-    off_direction = 0
-
     # These are a bunch of magic numbers that allow for the robot to turn in an exact number
     # of degrees expressed in terms of motor power and time.
     # These values were found using trial and error, DO NOT CHANGE. I shall know.
@@ -108,19 +114,18 @@ class Robot():
     # If you do figure this out but cannot write the code, just put it in English somewhere.
     # Don't worry too much about the 'Block' argument; it determines whether the call
     # to 'on' blocks (suspends executation) until it is done or not.
-    def rotate_left(self, deg):
+    def rotate_left(self):
+        cur_time = time.time()
         self.motor2.off()
         self.motor3.off()
         self.motor4.off()
-        self.motor1.on(SpeedPercent(self.rotate_magic_p * deg / 90))
-        self.off_direction -= deg
+        self.motor1.on(SpeedPercent(self.rotate_magic_p))
 
-    def rotate_right(self, deg):
-        self.motor2.off()
+    def rotate_right(self):
+        self.motor1.off()
         self.motor3.off()
         self.motor4.off()
-        self.motor1.on(SpeedPercent(self.rotate_magic_p * -deg / 90))
-        self.off_direction += deg
+        self.motor2.on(SpeedPercent(self.rotate_magic_p))
 
     # The following routines are fairly self-explanatory and can be easily understood
     # if the comment about which motors are which is understood.
@@ -172,6 +177,9 @@ class Robot():
     def colour_sensor(self):
         return (self.rgb)
 
+    # Get the bearing from the compass
+    def bearing(self):
+        return self.compass.value()
     # Instantiate the ultrasonic sensor
     # This will be used to determine how far we are away from a wall or something like that.
     us = UltrasonicSensor(INPUT_3)
@@ -187,7 +195,6 @@ def test_robot(robot):
         robot.forward(100, 1, False)
         robot.left(100, 1, False)
         robot.backward(100, 1, False)
-
 
 our_robot = Robot(MEDIUM_MOTOR)
 # DON'T WORRY ABOUT THE FOLLOWING FOR NOW.
@@ -222,6 +229,7 @@ close_thresh = 3
 # of only getting the ball to the backboard.
 # TODO: Use rotation instead of going left/right and then forward (more efficient)
 # See if you can figure out how to do this.
+our_robot.rotate_right()
 while True:
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 
@@ -229,7 +237,12 @@ while True:
     
     data = our_robot.inf_direction_strength()
     usdata = our_robot.us.distance_centimeters
+    angle = our_robot.bearing()
 
+    if angle < 0:
+        our_robot.rotate_right()
+    elif angle > 0: 
+        our_robot.rotate_left()
     # If we get no signal then perhaps the ball is behind us.
     if data[0] == our_robot.INF_DIR_NO_SIG:
         our_robot.backward(100)
