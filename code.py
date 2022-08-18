@@ -168,6 +168,10 @@ class Robot():
     def inf_subsensors(self, inf):
         return (self.inf.value(i) for i in range(1, 6))
 
+    # Get the values of the colour sensor.
+    def colour_sensor(self):
+        return (self.rgb)
+
     # Instantiate the ultrasonic sensor
     # This will be used to determine how far we are away from a wall or something like that.
     us = UltrasonicSensor(INPUT_3)
