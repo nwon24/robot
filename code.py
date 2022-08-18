@@ -30,11 +30,10 @@ import time
 MEDIUM_MOTOR = 0
 LARGE_MOTOR = 1
 class Robot():
-
     # The colour sensor is fairly uselss at the moment.
     # TODO: Use the colour sensor to determine if we are on the boundary of the playing field;
     # if that is the case, go back immediately, as the robot is not allowed outside of the playing area.
-    #cs = ColorSensor(INPUT_2)
+    cs = ColorSensor(INPUT_2)
 
     # Motor time units - adjust accordingly depending on what happens for different values.
     # Use trial and error.
@@ -176,6 +175,8 @@ class Robot():
     # Bit late for the initialisation of the infrared sensor, but...
     inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
    
+# Robot moves in square if you call this fucntion
+# Just use it to test stuff.
 def test_robot(robot):
     while True:
         robot.right(100, 1, False)
