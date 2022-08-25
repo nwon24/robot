@@ -27,6 +27,12 @@ from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import ColorSensor, UltrasonicSensor, InfraredSensor
 import time
 
+def congruent(a, m):
+    tmp = a %m
+    if tmp > m/2:
+        tmp = tmp - m
+    return tmp
+
 MEDIUM_MOTOR = 0
 LARGE_MOTOR = 1
 class Robot():
@@ -230,6 +236,7 @@ close_thresh = 3
 # TODO: Use rotation instead of going left/right and then forward (more efficient)
 # See if you can figure out how to do this.
 our_robot.rotate_right()
+angle_threshold = 10
 while True:
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 
@@ -239,11 +246,13 @@ while True:
     usdata = our_robot.us.distance_centimeters
     angle = our_robot.bearing()
 
-    if angle < 0:
+    if congruent(angle, 360) < -angle_threshold:
         our_robot.rotate_right()
-    elif angle > 0: 
+        continue
+    elif congruent(angle, 360) > angle_threshold:
         our_robot.rotate_left()
-    # If we get no signal then perhaps the ball is behind us.
+        continue
+   # If we get no signal then perhaps the ball is behind us.
     if data[0] == our_robot.INF_DIR_NO_SIG:
         our_robot.backward(100)
     # If we are close enough to the ball or it is directly in the centre
