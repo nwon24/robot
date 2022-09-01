@@ -139,28 +139,32 @@ class Robot():
     # In the future, we want to not use 'left' and 'right' to get to the ball -  instead we should go directly to it using
     # 'rotate_left' and 'rotate_right'
     def forward(self, p):
-        self.motor1.off()
-        self.motor2.off()
-        self.motor3.on(SpeedPercent(p))
-        self.motor4.on(SpeedPercent(p))
+#        self.motor1.off()
+#        self.motor2.off()
+#        self.motor3.on(SpeedPercent(p))
+#        self.motor4.on(SpeedPercent(p))
+        self.radial_move(0, p)
 
     def backward(self,p):
-        self.motor1.off()
-        self.motor2.off()
-        self.motor3.on(SpeedPercent(-p))
-        self.motor4.on(SpeedPercent(-p))
+#        self.motor1.off()
+#        self.motor2.off()
+#        self.motor3.on(SpeedPercent(-p))
+#        self.motor4.on(SpeedPercent(-p))
+        self.radial_move(180, p)
 
     def left(self,p):
-        self.motor3.off()
-        self.motor4.off()
-        self.motor1.on(SpeedPercent(p))
-        self.motor2.on(SpeedPercent(p))
+#        self.motor3.off()
+#        self.motor4.off()
+#        self.motor1.on(SpeedPercent(p))
+#        self.motor2.on(SpeedPercent(p))
+        self.radial_move(90, p)
 
     def right(self, p):
-        self.motor3.off()
-        self.motor4.off()
-        self.motor1.on(SpeedPercent(-p))
-        self.motor2.on(SpeedPercent(-p))
+#        self.motor3.off()
+#        self.motor4.off()
+#        self.motor1.on(SpeedPercent(-p))
+#        self.motor2.on(SpeedPercent(-p))
+        self.radial_move(270, p)
  
     # The following routines get information from the infrared sensor.
     # If you read the documentation on Canvas, you will know that the
@@ -194,6 +198,7 @@ class Robot():
     # Bit late for the initialisation of the infrared sensor, but...
     inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
 
+    # VIF: Very Important Function ahead
     # Move at a specific angle
     # CAUTION: BLACK MAGIC AHEAD
     # You are not expected to understand this.
@@ -204,16 +209,16 @@ class Robot():
         values = [0, 0, 0, 0]
         for i in range(4):
             # ????
-            values[i] = math.sin(theta - (((2 * i) + 1) * math.pi / 4))
+            values[i] = math.sin(theta - (((2 * i)) * math.pi / 4))
             # ????
             values[i] = round(values[i], 4)
         amp_ratio = speed / max(values)
-        values = [min(100, max(-100, amp_ratio)) * x for x in values]
+        values = [min(100, max(-100, amp_ratio) * x) for x in values]
 
         self.motor1.on(values[0])
         self.motor2.on(values[1])
-        self.motor3.on(values[2])
-        self.motor4.on(values[3])
+        self.motor3.on(-values[2])
+        self.motor4.on(-values[3])
    
 # Robot moves in square if you call this fucntion
 # Just use it to test stuff.
@@ -261,9 +266,9 @@ angle_threshold = 10
 
 # Testing for 'radial_move' method. Uncomment.
 # Currently doesn't work. Spins around forever.
-#our_robot.radial_move(45)
-#while True:
-#    pass
+our_robot.radial_move(90)
+while True:
+    pass
 while True:
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 

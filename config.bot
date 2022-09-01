@@ -23,7 +23,7 @@ devices:
     position:
     - 0
     - -5
-    rotation: 0
+    rotation: 180
 - ColorSensor:
     port: in2
     position:
@@ -58,5 +58,5 @@ devices:
     position:
     - -5
     - 0
-    rotation: 90
+    rotation: 270
 type: python
