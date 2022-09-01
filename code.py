@@ -26,6 +26,7 @@ from ev3sim.code_helpers import wait_for_tick
 from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1, INPUT_4
 from ev3dev2.sensor.lego import ColorSensor, UltrasonicSensor, InfraredSensor
 import time
+import math
 
 def congruent(a, m):
     tmp = a %m
@@ -192,6 +193,27 @@ class Robot():
 
     # Bit late for the initialisation of the infrared sensor, but...
     inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
+
+    # Move at a specific angle
+    # CAUTION: BLACK MAGIC AHEAD
+    # You are not expected to understand this.
+    # TODO: Adapt it to our robot.
+    # Currently spins around instead of moving at the proper angle.
+    def radial_move(self, angle, speed = 100):
+        theta = math.radians(angle)
+        values = [0, 0, 0, 0]
+        for i in range(4):
+            # ????
+            values[i] = math.sin(theta - (((2 * i) + 1) * math.pi / 4))
+            # ????
+            values[i] = round(values[i], 4)
+        amp_ratio = speed / max(values)
+        values = [min(100, max(-100, amp_ratio)) * x for x in values]
+
+        self.motor1.on(values[0])
+        self.motor2.on(values[1])
+        self.motor3.on(values[2])
+        self.motor4.on(values[3])
    
 # Robot moves in square if you call this fucntion
 # Just use it to test stuff.
@@ -235,29 +257,35 @@ close_thresh = 3
 # of only getting the ball to the backboard.
 # TODO: Use rotation instead of going left/right and then forward (more efficient)
 # See if you can figure out how to do this.
-our_robot.rotate_right()
 angle_threshold = 10
+
+# Testing for 'radial_move' method. Uncomment.
+# Currently doesn't work. Spins around forever.
+#our_robot.radial_move(45)
+#while True:
+#    pass
 while True:
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 
     current_time = time.time()
     
     data = our_robot.inf_direction_strength()
+#    usdata = our_robot.us.distance_centimeters
     usdata = our_robot.us.distance_centimeters
     angle = our_robot.bearing()
 
     if congruent(angle, 360) < -angle_threshold:
-        our_robot.rotate_right()
+        our_robot.rotate_left()
         continue
     elif congruent(angle, 360) > angle_threshold:
-        our_robot.rotate_left()
+        our_robot.rotate_right()
         continue
    # If we get no signal then perhaps the ball is behind us.
     if data[0] == our_robot.INF_DIR_NO_SIG:
         our_robot.backward(100)
     # If we are close enough to the ball or it is directly in the centre
     # just head towards it in a straight line.
-    elif usdata <= close_thresh or data[0] == our_robot.INF_DIR_CEN:
+    elif usdata < close_thresh or data[0] == our_robot.INF_DIR_CEN:
         our_robot.forward(100)
     # Go left or right depending where the ball is.
     # Since we test for 'close_thresh' value in the data collected
