@@ -21,6 +21,7 @@
 # These are just all the imports, don't worry too much about it.
 # However, if you need to import anything else for whatever reason, add it here;
 # don't sprinkle it throughout the code. That is plain ugly.
+from ev3dev2.button import Button
 from ev3dev2.motor import LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_C,OUTPUT_D, SpeedPercent
 from ev3sim.code_helpers import wait_for_tick
 from ev3dev2.sensor import INPUT_2, INPUT_3, Sensor, INPUT_1, INPUT_4
@@ -269,7 +270,14 @@ angle_threshold = 10
 #our_robot.radial_move(90)
 #while True:
 #    pass
+#state = False
+#button = Button()
 while True:
+# Uncomment if using on a physical robot
+#    if button.enter == True:
+#        state = not state
+#    if state == False:
+#        continue 
     wait_for_tick() # All loops in the simulator must start with wait_for_tick
 
     current_time = time.time()
