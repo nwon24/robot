@@ -52,11 +52,11 @@ devices:
     position:
     - 5
     - 0
-    rotation: 90
+    rotation: 270
 - MediumMotor:
     port: outB
     position:
     - -5
     - 0
-    rotation: 270
+    rotation: 90
 type: python
