@@ -41,7 +41,7 @@ class Robot():
     # The colour sensor is fairly uselss at the moment.
     # TODO: Use the colour sensor to determine if we are on the boundary of the playing field;
     # if that is the case, go back immediately, as the robot is not allowed outside of the playing area.
-    cs = ColorSensor(INPUT_2)
+    #cs = UltrasonicSensor(INPUT_3)
 
     # Motor time units - adjust accordingly depending on what happens for different values.
     # Use trial and error.
@@ -85,10 +85,16 @@ class Robot():
         # This is where we use the compass to actually do stuff.
         # If the robot rotates for whatever reason (like if it hits the corner of a goal)
         # we want to reotate the right way.
-        self.compass = Sensor(INPUT_4, driver_name='ht-nxt-compass')
+        self.compass = Sensor(INPUT_1, driver_name='ht-nxt-compass')
         # Calibrate the compass sensor.
         self.compass.command = "BEGIN-CAL"
         self.compass.command = "END-CAL"
+        # Instantiate the ultrasonic sensor
+        # This will be used to determine how far we are away from a wall or something like that.
+        self.us = UltrasonicSensor(INPUT_2)
+
+        # Bit late for the initialisation of the infrared sensor, but...
+        self.inf = Sensor(INPUT_4, driver_name="ht-nxt-ir-seek-v2") 
 
 
     # Enums but not really.
@@ -192,12 +198,6 @@ class Robot():
     # Get the bearing from the compass
     def bearing(self):
         return self.compass.value()
-    # Instantiate the ultrasonic sensor
-    # This will be used to determine how far we are away from a wall or something like that.
-    us = UltrasonicSensor(INPUT_3)
-
-    # Bit late for the initialisation of the infrared sensor, but...
-    inf = Sensor(INPUT_1, driver_name="ht-nxt-ir-seek-v2") 
 
     # VIF: Very Important Function ahead
     # Move at a specific angle
@@ -231,6 +231,7 @@ def test_robot(robot):
         robot.backward(100, 1, False)
 
 our_robot = Robot(MEDIUM_MOTOR)
+#our_robot = Robot(MEDIUM_MOTOR)
 # DON'T WORRY ABOUT THE FOLLOWING FOR NOW.
 FREQ = 1
 # Uncomment time stuff to do scheduling
@@ -248,7 +249,8 @@ FREQ = 1
 
 # This is how close to the ball we deem the infrared sensor to be irrelevant.
 # You can change this to see what happens.
-close_thresh = 3
+#close_thresh = 3
+close_thresh = 4
 
 # BIG NOTE THAT MUST BE READ:
 # The following code is the only part of the code that is only for our bot that
